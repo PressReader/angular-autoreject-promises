@@ -1,0 +1,23 @@
+{
+  "name": "ng-autoreject-promises",
+  "version": "0.0.1",
+  "homepage": "https://github.com/pressreader/ng-autoreject-promises",
+  "authors": [
+    "Alexander Koshelev <alexanderk@pressreader.com>"
+  ],
+  "description": "Adds promise auto-rejection by timeout to $q service.",
+  "main": "src\\q.autoreject.js",
+  "keywords": [
+    "angular",
+    "$q",
+    "proimise"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

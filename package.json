@@ -1,0 +1,23 @@
+{
+  "name": "ng-autoreject-promises",
+  "version": "0.0.1",
+  "description": "\u0016Adds promise auto-rejection by timeout to $q service.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PressReader/ng-autoreject-promises.git"
+  },
+  "keywords": [
+    "angularjs",
+    "$q"
+  ],
+  "author": "PressReader",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PressReader/ng-autoreject-promises/issues"
+  },
+  "homepage": "https://github.com/PressReader/ng-autoreject-promises#readme",
+  "devDependencies": {
+    "karma": "^0.13.9",
+    "karma-mocha": "^0.2.0"
+  }
+}
