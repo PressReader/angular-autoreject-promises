@@ -18,6 +18,9 @@
   "homepage": "https://github.com/PressReader/ng-autoreject-promises#readme",
   "devDependencies": {
     "karma": "^0.13.9",
-    "karma-mocha": "^0.2.0"
+    "karma-chrome-launcher": "^0.2.1",
+    "karma-mocha": "^0.2.0",
+    "mocha": "^2.3.3",
+    "wiredep": "^2.2.2"
   }
 }
