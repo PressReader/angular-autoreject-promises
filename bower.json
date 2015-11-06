@@ -6,7 +6,7 @@
     "Alexander Koshelev <alexanderk@pressreader.com>"
   ],
   "description": "Adds promise auto-rejection by timeout to $q service.",
-  "main": "src\\q.autoreject.js",
+  "main": "src\\autorejectQ.js",
   "keywords": [
     "angular",
     "$q",

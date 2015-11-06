@@ -13,19 +13,28 @@ describe('timeoutQ', function() {
       clock,
       emptyPromiseFactories = [
         /* $q.defer promises */
-        function(resolveResult) {
+        function(resolveResult, rejectResult) {
           var defer = $q.defer();
           if (resolveResult) defer.resolve(resolveResult());
+          if (rejectResult) defer.reject(rejectResult());
+
           return defer.promise;
         },
         /* native style promises */
-        function(resolveResult) { return $q(function(resolve) { if (resolveResult) resolve(resolveResult()); }); }
-      ];
+        function(resolveResult, rejectResult) {
+          return $q(function(resolve, reject) {
+            if (resolveResult) resolve(resolveResult());
+            if (rejectResult) reject(rejectResult());
+          });
+        }
+      ],
+      provider;
 
   beforeEach(module('ng-autoreject-promises', ['autorejectProvider', function(_autorejectProvider_) {
-    var provider = _autorejectProvider_;
+    provider = _autorejectProvider_;
     provider.config({
       logTimeouts: true,
+      enable: true,
       timeoutInterval: timeoutInterval
     });
   }]));
@@ -49,7 +58,7 @@ describe('timeoutQ', function() {
     return arr.reduce(function(a, b) {
       return a.concat(b);
     }, []);
-  };
+  }
 
   angular.forEach(emptyPromiseFactories, function(promiseFactory) {
     it('keeps a promise in pending state if no timeout happened', function() {
@@ -100,7 +109,7 @@ describe('timeoutQ', function() {
       promise.should.have.deep.property('$$state.status', 0);
     });
 
-    it('does nothing, if promise is rejected/resolved at the time of timeout', function() {
+    it('does nothing, if promise is resolved at the time of timeout', function() {
       // Arrange
       var resolveObject = { x: 2 },
           promise       = promiseFactory(function() { return resolveObject; });
@@ -111,6 +120,52 @@ describe('timeoutQ', function() {
       // Assert
       $log.assertEmpty();
       return promise.should.eventually.be.equal(resolveObject) && $timeout.flush();
+    });
+
+    it('does nothing, if promise is rejected at the time of timeout', function() {
+      // Arrange
+      promiseFactory(null, function() { return "rejection reason."; });
+
+      // Act
+      clock.tick(timeoutInterval);
+
+      // Assert
+      $log.assertEmpty();
+    });
+
+    it('gets promise rejected with reason specified by user if no timeout happened', function() {
+      // Arrange
+      var rejectionReason = "reason",
+          promise         = promiseFactory(null, function() { return rejectionReason; });
+
+      // Act
+      clock.tick(timeoutInterval);
+
+      // Assert
+      return promise.should.eventually.be.rejectedWith(rejectionReason) && $timeout.flush();
+    });
+
+    it('does nothing if disabled', function() {
+      // Arrange
+      provider.config({ enable: false });
+      var promise       = promiseFactory();
+
+      // Act
+      clock.tick(timeoutInterval);
+
+      // Assert
+      promise.should.have.deep.property('$$state.status', 0);
+    });
+  });
+
+  angular.forEach(['when', 'all', 'resolve', 'reject'], function(method) {
+    it('decorated $q service must respond to "' + method + '"', function() {
+      // Arrange
+
+      // Act
+
+      // Assert
+      angular.isFunction($q[method]).should.equal(true, method + ' was not copied from original $q service');
     });
   });
 
