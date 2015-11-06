@@ -1,8 +1,7 @@
-/**
- * Created on 11/4/2015.
- */
-
-
+//  angular-autoreject-promises v0.0.1
+//  https://github.com/pressreader/angular-autoreject-promises
+//  (c) 2015 PressReader
+//  this library may be freely distributed under the MIT license.
 (function(angular) {
 
   'use strict';
@@ -21,7 +20,7 @@
            * boolean flag, to indicate whether rejections by timeout should be
            * written to $log service or not.
            */
-          logTimeouts: false,
+          logTimeouts: true,
 
           /**
            * If set to false, this provider will not add timeout functionality
@@ -38,13 +37,13 @@
     function timeoutQDecorator($delegate, $rootScope, $log) {
 
       var $Q              = $delegate,
-          error           = new Error('Promise has been rejected due to a timeout.'),
           /**
            * this function creates a promise that gets automatically rejected
            * after timeout occurs.
+           * @param {Error} error - error description to be used when rejecting this promise.
            * @returns {Promise} - promise object.
            */
-          timeout         = function timeoutPromise() {
+          timeout         = function timeoutPromise(error) {
             return $Q(function(resolve, reject) {
               setTimeout(function() {
 
@@ -66,22 +65,22 @@
             return $Q(function(resolve, reject) {
               angular.forEach(promises, function(promise) {
                 promise.then(resolve, reject);
-              })
-            })
+              });
+            });
           },
           /**
            * Creates a `Autorejected Deferred` object which represents a task which will finish in the future.
            * if task is not completed after a specified amount of time it will automatically be rejected.
-           *
            * @returns {Deferred} Returns a new instance of deferred.
            */
           autorejectDefer = function autorejectDefer() {
 
             if (!settings.enable) return $Q.defer();
 
-            var dfd = $Q.defer();
+            var dfd = $Q.defer(),
+                error = new Error('Promise has been rejected due to a timeout.');
 
-            race([dfd.promise, timeout()])
+            race([dfd.promise, timeout(error)])
             // specification allows multiple resolve calls on the same defer
             // only first will matter, all other will simply be ignored.
               .then(dfd.resolve, function(reason) {
@@ -125,6 +124,8 @@
      * until promise will be automatically rejected.
      * @param {Boolean} config.logTimeouts - indicates whether rejections by timeout should be
      * written to $log service or not.
+     * @param {Boolean} config.enable - If set to false, this provider will not add timeout functionality
+     * to $q service. It is recommended to enable this provider for debug purposes only.
      */
     this.config = function(config) {
       settings = angular.extend({}, settings, config);
@@ -138,7 +139,7 @@
   }
 
   angular
-    .module('ng-autoreject-promises', [])
+    .module('angular-autoreject-promises', [])
     .provider('autoreject', autorejectProvider);
 
 })(window.angular);

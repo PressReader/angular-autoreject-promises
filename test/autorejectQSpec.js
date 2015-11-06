@@ -30,7 +30,7 @@ describe('timeoutQ', function() {
       ],
       provider;
 
-  beforeEach(module('ng-autoreject-promises', ['autorejectProvider', function(_autorejectProvider_) {
+  beforeEach(module('angular-autoreject-promises', ['autorejectProvider', function(_autorejectProvider_) {
     provider = _autorejectProvider_;
     provider.config({
       logTimeouts: true,
