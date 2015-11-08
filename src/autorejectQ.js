@@ -42,6 +42,7 @@
            * after timeout occurs.
            * @param {Error} error - error description to be used when rejecting this promise.
            * @returns {Promise} - promise object.
+           * @private
            */
           timeout         = function timeoutPromise(error) {
             return $Q(function(resolve, reject) {
@@ -54,12 +55,13 @@
             });
           },
           /**
-           * A naive implementation of Promise.race .
+           * A naive implementation of Promise.race.
            * see
            * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race}
            * for details.
            * @param {Array<Promise>} promises - array of promises
            * @returns {Promise} - promise, gets resolved or rejected as soon as any promise fulfills/rejects.
+           * @private
            */
           race            = function race(promises) {
             return $Q(function(resolve, reject) {
@@ -69,7 +71,7 @@
             });
           },
           /**
-           * Creates a `Autorejected Deferred` object which represents a task which will finish in the future.
+           * Creates an `Autorejected Deferred` object which represents a task which will finish in the future.
            * if task is not completed after a specified amount of time it will automatically be rejected.
            * @returns {Deferred} Returns a new instance of deferred.
            */
@@ -78,18 +80,26 @@
             if (!settings.enable) return $Q.defer();
 
             var dfd = $Q.defer(),
-                error = new Error('Promise has been rejected due to a timeout.');
+                timeoutError = new Error('Promise has been rejected due to a timeout.');
 
-            race([dfd.promise, timeout(error)])
+            // reason not to have a custom Error class
+            // is that it seems to be impossible to get
+            // the same formatting in developer console as Error type has.
+            // so in case of custom Error class we will not get
+            // pretty stack trace formatting with collapse/expand feature
+            // (at least in Chrome browser).
+            timeoutError.$$timeoutSignal = true;
+
+            race([dfd.promise, timeout(timeoutError)])
             // specification allows multiple resolve calls on the same defer
             // only first will matter, all other will simply be ignored.
               .then(dfd.resolve, function(reason) {
 
-                if (reason === error && settings.logTimeouts) {
-                  $log.error(error);
+                if (reason === timeoutError && settings.logTimeouts) {
+                  $log.error(reason);
                 }
 
-                dfd.reject(error);
+                dfd.reject(reason);
               });
 
             return dfd;
@@ -131,8 +141,28 @@
       settings = angular.extend({}, settings, config);
     };
 
+
     this.$get = function $get() {
-      // nothing to provide here
+
+      return {
+        /**
+         * Checks whether an error, specified by the parameter,
+         * is a timeout rejection error.
+         * @param {Error} error - error to check.
+         * @returns {Boolean} If true - error is timeout error,
+         * otherwise false.
+         * @example
+         * var p = $q(resolver)
+         * .catch(function(reason) {
+         *   if (autoreject.isTimeoutError(reason)) {
+         *     // handle timeout errors here.
+         *   }
+         * });
+         */
+        isTimeoutError: function isTimeoutError(error) {
+          return error && error.$$timeoutSignal || false;
+        }
+      }
     };
 
     $provide.decorator('$q', timeoutQDecorator);

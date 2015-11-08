@@ -9,7 +9,7 @@ describe('timeoutQ', function() {
   var $timeout,
       $q,
       $log,
-      timeoutInterval = 1000,
+      timeoutInterval       = 1000,
       clock,
       emptyPromiseFactories = [
         /* $q.defer promises */
@@ -28,6 +28,7 @@ describe('timeoutQ', function() {
           });
         }
       ],
+      autoreject,
       provider;
 
   beforeEach(module('angular-autoreject-promises', ['autorejectProvider', function(_autorejectProvider_) {
@@ -39,10 +40,11 @@ describe('timeoutQ', function() {
     });
   }]));
 
-  beforeEach(inject(function(_$timeout_, _$q_, _$log_) {
-    $timeout = _$timeout_;
-    $q       = _$q_;
-    $log     = _$log_;
+  beforeEach(inject(function(_$timeout_, _$q_, _$log_, _autoreject_) {
+    $timeout   = _$timeout_;
+    $q         = _$q_;
+    $log       = _$log_;
+    autoreject = _autoreject_;
   }));
 
   beforeEach(function() {
@@ -112,7 +114,9 @@ describe('timeoutQ', function() {
     it('does nothing, if promise is resolved at the time of timeout', function() {
       // Arrange
       var resolveObject = { x: 2 },
-          promise       = promiseFactory(function() { return resolveObject; });
+          promise       = promiseFactory(function() {
+            return resolveObject;
+          });
 
       // Act
       clock.tick(timeoutInterval);
@@ -124,7 +128,9 @@ describe('timeoutQ', function() {
 
     it('does nothing, if promise is rejected at the time of timeout', function() {
       // Arrange
-      promiseFactory(null, function() { return "rejection reason."; });
+      promiseFactory(null, function() {
+        return "rejection reason.";
+      });
 
       // Act
       clock.tick(timeoutInterval);
@@ -136,7 +142,9 @@ describe('timeoutQ', function() {
     it('gets promise rejected with reason specified by user if no timeout happened', function() {
       // Arrange
       var rejectionReason = "reason",
-          promise         = promiseFactory(null, function() { return rejectionReason; });
+          promise         = promiseFactory(null, function() {
+            return rejectionReason;
+          });
 
       // Act
       clock.tick(timeoutInterval);
@@ -148,7 +156,7 @@ describe('timeoutQ', function() {
     it('does nothing if disabled', function() {
       // Arrange
       provider.config({ enable: false });
-      var promise       = promiseFactory();
+      var promise = promiseFactory();
 
       // Act
       clock.tick(timeoutInterval);
@@ -169,4 +177,31 @@ describe('timeoutQ', function() {
     });
   });
 
+  describe('#wasRejectedByTimeout', function() {
+    it('returns false if error is not a TimeoutError.', function() {
+      // Arrange
+      var error = new Error();
+
+      // Act
+      var result = autoreject.isTimeoutError(error);
+
+      // Assert
+      result.should.equal(false);
+    });
+
+    it('returns true if error is a timeout error', function() {
+      // Arrange
+      var error;
+      $q.defer().promise.catch(function(reason) {
+        error = reason;
+      });
+      clock.tick(timeoutInterval);
+
+      // Act
+      var result = autoreject.isTimeoutError(error);
+
+      // Assert
+      result.should.equal(true);
+    });
+  });
 });
