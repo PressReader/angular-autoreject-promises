@@ -1,6 +1,45 @@
 # angular-autoreject-promises
 Adds promise auto-rejection by timeout to $q service.
 
+# Install
+
+# Example
+
+```js
+
+// add module dependency
+var module = angular.module('myApp', ['angular-autoreject-promises']);
+
+// configure autoreject provider
+module.config(function(autorejectProvider) {
+  autorejectProvider.config({
+    // this will enable autoreject functionality. 
+    enable: true,
+    // allow 15 sec wait before promise gets rejected
+    timeoutInterval: 15000, 
+    // all timeouts will be logged via $log service
+    logTimeouts: true
+  });
+});
+
+// sample service
+module.factory('sampleService', function($timeout, $q) {
+
+  var simulateLongWaitPromise = $q(function(resolve, reject) {
+    $timeout(function() {
+      resolve();
+    }, 20000);
+  });
+  
+  return simulateLongWaitPromise.then(function() {
+    // if autorejection works, we should never see this message in the console
+    console.log('data loaded');
+  });
+});
+
+```
+
+
 ## LICENSE
 The MIT License (MIT)
 
