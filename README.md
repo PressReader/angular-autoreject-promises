@@ -32,6 +32,9 @@ This is where auto-rejection comes to play. If promise is neither resolved nor r
     .get('/some/url')
     .catch(function(reason) {
       // handle reason and resend request or cancel it
+      if (autoreject.isTimeoutError(reason)) {
+      
+      }
     });
   });
 ```
@@ -78,7 +81,7 @@ module.config(function(autorejectProvider) {
 });
 
 // sample service
-module.factory('sampleService', function($timeout, $q) {
+module.factory('sampleService', function($timeout, $q, autoreject) {
 
   var simulateLongWaitPromise = $q(function(resolve, reject) {
     $timeout(function() {
@@ -89,6 +92,11 @@ module.factory('sampleService', function($timeout, $q) {
   return simulateLongWaitPromise.then(function() {
     // if autorejection works, we should never see this message in the console
     console.log('data loaded');
+  })
+  .catch(function(reason) {
+    if autoreject.isTimeoutError(reason) {
+      // do something with timeout
+    }
   });
 });
 
